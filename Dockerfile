@@ -1,7 +1,9 @@
-FROM alpine:3.3
-LABEL works.weave.role=system
+FROM ubuntu 
+ENV CORTEXAGENT=""
+RUN apt-get -y update   
+RUN apt-get install -y curl
 COPY ./iops /usr/bin/iops
-RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
+LABEL works.weave.role=system
 ENTRYPOINT ["/usr/bin/iops"]
-ENV CORTEX-AGENT ""
+
 

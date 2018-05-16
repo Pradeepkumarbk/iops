@@ -8,8 +8,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -60,7 +62,7 @@ type Iops struct {
 func getValue(body []byte) (*Iops, error) {
 	var s = new(Iops)
 	err := json.Unmarshal(body, &s)
-	//log.Printf("================%+v", s)
+	log.Printf("================%+v", s)
 	if err != nil {
 		fmt.Println("whoops:")
 	}
@@ -70,11 +72,20 @@ func main() {
 	//we put the in a sub-directory to have more control on the permissions
 	const socketPath = "/var/run/scope/plugins/iowait/iowait.sock"
 	//url := "http://cortex-agent-service.maya-system.svc.cluster.local:80/api/v1/query?query=OpenEBS_write_iops"
-	url := os.Getenv("CORTEX-AGENT")
-	//log.Printf("---%+v", url)
+	//url := "http://172.17.0.5:80/api/v1/query?query=OpenEBS_write_iops"
+    url := os.Getenv("CORTEXAGENT")
+	fmt.Printf("len-1---%+v\n", len(url))
+	fmt.Printf("len-2---%+v\n", len(strings.TrimSpace(url)))
+
+	fmt.Printf("---%+v\n", url)
+	fmt.Printf("---%+v\n", strings.TrimSpace(url))
+
+
+	out, err := exec.Command("curl", strings.TrimSpace(url)).CombinedOutput()
+	fmt.Println("output:", string(out), err)
 
 	// Get request to url
-	res, err := http.Get(url)
+	res, err := http.Get(strings.TrimSpace(url))
 	if err != nil {
 		log.Println(err.Error())
 		return
@@ -103,6 +114,7 @@ func main() {
 		listener.Close()
 		os.RemoveAll(filepath.Dir(socketPath))
 	}()
+    log.Printf("pr: %v",s)
 	plugin, err := NewPlugin(s.Data.Result[0].Metric.OpenebsPv)
 	if err != nil {
 		log.Fatalf("Failed to create a plugin: %v", err)

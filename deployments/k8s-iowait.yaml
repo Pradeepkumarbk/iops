@@ -1,9 +1,10 @@
 apiVersion: extensions/v1beta1
-kind: DaemonSet
+kind: Deployment
 metadata:
   labels:
     app: weavescope
     weavescope-component: weavescope-iowait-plugin
+    name: cortex-agent-retriever
   name: weavescope-iowait-plugin
 spec:
   template:
@@ -13,19 +14,20 @@ spec:
         weavescope-component: weavescope-iowait-plugin
     spec:
       hostPID: true
-      hostNetwork: true
+    #hostNetwork: true
       containers:
         - name: weavescope-iowait-plugin
-          image: pradeepkumar95/iops:latest
-          imagePullPolicy: Always
+          image: pradeepkumar95/iops:v30
+          imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
           volumeMounts:
           - name: scope-plugins
             mountPath: /var/run/scope/plugins
           env:
-          - name: CORTEX-AGENT
+          - name: CORTEXAGENT
             value: "http://cortex-agent-service.maya-system.svc.cluster.local:80/api/v1/query?query=OpenEBS_write_iops"
+            # value: "http://weavescope-iowait-plugin-service.maya-system.svc.cluster.local:80/api/v1/query?query=OpenEBS_write_iops"
       volumes:
       - name: scope-plugins
         hostPath:
